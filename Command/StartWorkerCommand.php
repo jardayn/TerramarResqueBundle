@@ -3,6 +3,7 @@
 namespace Terramar\Bundle\ResqueBundle\Command;
 
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -33,9 +34,9 @@ class StartWorkerCommand extends ContainerAwareCommand
             'COUNT'       => $input->getOption('count'),
             'INTERVAL'    => $input->getOption('interval'),
         );
-        $prefix = $this->getContainer()->getParameter('terramar.prefix');
+        $prefix = $this->getContainer()->getParameter('terramar.resque.prefix');
         if (!empty($prefix)) {
-            $env['PREFIX'] = $this->getContainer()->getParameter('terramar.prefix');
+            $env['PREFIX'] = $prefix;
         }
         if ($input->getOption('verbose')) {
             $env['VVERBOSE'] = 1;
@@ -48,7 +49,9 @@ class StartWorkerCommand extends ContainerAwareCommand
         $redisPort = $this->getContainer()->getParameter('terramar.resque.redis.port');
         $redisDatabase = $this->getContainer()->getParameter('terramar.resque.redis.database');
         if ($redisHost != null && $redisPort != null) {
-            $env['REDIS_BACKEND'] = $redisHost.':'.$redisPort;
+            $backend = strpos($redisHost, 'unix:') === false ? $redisHost.':'.$redisPort : $redisHost;
+
+            $env['REDIS_BACKEND'] = $backend;
         }
         if (isset($redisDatabase)) {
             $env['REDIS_BACKEND_DB'] = $redisDatabase;
@@ -58,9 +61,10 @@ class StartWorkerCommand extends ContainerAwareCommand
         if (0 !== $m = (int) $input->getOption('memory-limit')) {
             $opt = sprintf('-d memory_limit=%dM', $m);
         }
-        $workerCommand = strtr('php %opt% %dir%/chrisboulton/php-resque/resque.php', array(
+        $workerCommand = strtr('%bin% %opt% %dir%/../bin/resque', array(
+            '%bin%' => $this->getPhpBinary(),
             '%opt%' => $opt,
-            '%dir%' => $this->getContainer()->getParameter('terramar.resque.vendor_dir'),
+            '%dir%' => $this->getContainer()->getParameter('kernel.root_dir'),
         ));
 
         if (!$input->getOption('foreground')) {
@@ -105,5 +109,12 @@ class StartWorkerCommand extends ContainerAwareCommand
                 $output->writeln(\sprintf('<info>Worker started</info> %s:%s:%s', $hostname, $pid, $input->getArgument('queues')));
             }
         }
+    }
+
+    private function getPhpBinary()
+    {
+        $finder = new PhpExecutableFinder();
+
+        return $finder->find();
     }
 }
