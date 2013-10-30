@@ -30,7 +30,7 @@ class TerramarResqueExtension extends Extension
         $container->setParameter('terramar.resque.redis.port', $config['redis']['port']);
         $container->setParameter('terramar.resque.redis.database', $config['redis']['database']);
 
-        if(!empty($config['prefix'])) {
+        if (!empty($config['prefix'])) {
             $container->setParameter('terramar.resque.prefix', $config['prefix']);
             $container->getDefinition('terramar.resque')->addMethodCall('setPrefix', array($config['prefix']));
         }
