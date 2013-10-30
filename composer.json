@@ -1,0 +1,34 @@
+{
+  "name": "terramar/resque-bundle",
+  "type": "symfony-bundle",
+  "description": "A fork of BCCResqueBundle, provides integration with php-resque and Symfony2 applications",
+  "keywords": ["resque", "php"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Michel Salib",
+      "email": "michelsalib@hotmail.com",
+      "homepage": "http://michelsalib.com"
+    },
+    {
+      "name": "Tyler Sommer",
+      "email": "contact@tylersommer.pro"
+    }
+  ],
+  "require": {
+    "symfony/framework-bundle": "~2.3",
+    "symfony/console": "~2.3",
+    "symfony/process": "~2.3",
+    "chrisboulton/php-resque": "~1.2",
+    "chrisboulton/php-resque-scheduler": "~1.1"
+  },
+  "autoload": {
+    "psr-0": { "Terramar\\Bundle\\ResqueBundle": "" }
+  },
+  "target-dir": "Terramar/Bundle/ResqueBundle",
+  "extra": {
+    "branch-alias": {
+      "dev-develop": "1.0-dev"
+    }
+  }
+}
