@@ -1,6 +1,6 @@
 <?php
 
-include_once __DIR__ . '/../vendor/autoload.php';
+(@include_once __DIR__ . '/../vendor/autoload.php') || @include_once __DIR__ . '/../../../../../../autoload.php';
 
 $REDIS_BACKEND = getenv('REDIS_BACKEND');
 if (!empty($REDIS_BACKEND)) {
