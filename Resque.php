@@ -32,7 +32,11 @@ class Resque
             'database' => $database,
         );
 
-        \Resque::setBackend($host.':'.$port, $database);
+        if (strpos($host, 'unix:') === false) {
+            $host .= ':' . $port;
+        }
+
+        \Resque::setBackend($host, $database);
     }
 
     public function getRedisConfiguration()
