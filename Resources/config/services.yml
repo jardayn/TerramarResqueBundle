@@ -8,7 +8,7 @@ parameters:
 services:
   terramar.resque:
     class: %terramar.resque.class%
-    arguments: [ %kernel.root_dir%, %kernel.debug%, %kernel.environment% ]
+    arguments: [ { "kernel.root_dir": %kernel.root_dir%, "kernel.debug": %kernel.debug%, "kernel.environment": %kernel.environment% } ]
     calls:
-      - [ setRedisConfiguration, [ %terramar.resque.redis.host%, %terramar.resque.redis.port%, %terramar.resque.redis.database% ]
+      - [ setRedisConfiguration, [ %terramar.resque.redis.host%, %terramar.resque.redis.port%, %terramar.resque.redis.database% ] ]
       - [ pruneDeadWorkers ]
