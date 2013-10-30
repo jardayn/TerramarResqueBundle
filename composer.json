@@ -26,6 +26,7 @@
     "psr-0": { "Terramar\\Bundle\\ResqueBundle": "" }
   },
   "target-dir": "Terramar/Bundle/ResqueBundle",
+  "bin": ["bin/resque", "bin/resque.php", "bin/resque-scheduler", "bin/resque-scheduler.php"],
   "extra": {
     "branch-alias": {
       "dev-develop": "1.0-dev"
