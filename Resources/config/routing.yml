@@ -1,0 +1,19 @@
+TerramarResqueBundle_homepage:
+  path:      /
+  defaults:  { _controller: TerramarResqueBundle:Default:index }
+
+TerramarResqueBundle_queue_show:
+  path:      /queue/{queue}
+  defaults:  { _controller: TerramarResqueBundle:Default:showQueue }
+
+TerramarResqueBundle_failed_list:
+  path:      /failed/list
+  defaults:  { _controller: TerramarResqueBundle:Default:listFailed }
+
+TerramarResqueBundle_scheduled_list:
+  path:      /scheduled/list
+  defaults:  { _controller: TerramarResqueBundle:Default:listScheduled }
+
+TerramarResqueBundle_scheduled_timestamp:
+  path:      /scheduled/{timestamp}
+  defaults:  { _controller: TerramarResqueBundle:Default:showTimestamp }
