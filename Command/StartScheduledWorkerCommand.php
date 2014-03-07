@@ -3,6 +3,7 @@
 namespace Terramar\Bundle\ResqueBundle\Command;
 
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -34,25 +35,24 @@ class StartScheduledWorkerCommand extends ContainerAwareCommand
         $env = array(
             'APP_INCLUDE' => $this->getContainer()->getParameter('kernel.root_dir').'/bootstrap.php.cache',
             'VVERBOSE'    => 1,
-            'RESQUE_PHP' => $this->getContainer()->getParameter('terramar.resque.vendor_dir').'/chrisboulton/php-resque/lib/Resque.php',
         );
-
-        $prefix = $this->getContainer()->getParameter('terramar.prefix');
-        if (!empty($prefix)) {
-            $env['PREFIX'] = $this->getContainer()->getParameter('terramar.prefix');
-        }
 
         $redisHost = $this->getContainer()->getParameter('terramar.resque.redis.host');
         $redisPort = $this->getContainer()->getParameter('terramar.resque.redis.port');
         $redisDatabase = $this->getContainer()->getParameter('terramar.resque.redis.database');
         if ($redisHost != null && $redisPort != null) {
-            $env['REDIS_BACKEND'] = $redisHost.':'.$redisPort;
+            $backend = strpos($redisHost, 'unix:') === false ? $redisHost.':'.$redisPort : $redisHost;
+
+            $env['REDIS_BACKEND'] = $backend;
         }
         if (isset($redisDatabase)) {
             $env['REDIS_BACKEND_DB'] = $redisDatabase;
         }
 
-        $workerCommand = 'php '.$this->getContainer()->getParameter('terramar.resque.vendor_dir').'/chrisboulton/php-resque-scheduler/resque-scheduler.php';
+        $workerCommand = strtr('%bin% %dir%/../bin/resque-scheduler', array(
+                '%bin%' => $this->getPhpBinary(),
+                '%dir%' => $this->getContainer()->getParameter('kernel.root_dir'),
+            ));
 
         if (!$input->getOption('foreground')) {
             $logFile = $this->getContainer()->getParameter(
@@ -92,5 +92,12 @@ class StartScheduledWorkerCommand extends ContainerAwareCommand
             $output->writeln(\sprintf('<info>Worker started</info> %s:%s', $hostname, $pid));
             file_put_contents($pidFile,$pid);
         }
+    }
+
+    private function getPhpBinary()
+    {
+        $finder = new PhpExecutableFinder();
+
+        return $finder->find();
     }
 }
