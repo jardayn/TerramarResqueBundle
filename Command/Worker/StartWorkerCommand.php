@@ -1,6 +1,6 @@
 <?php
 
-namespace Terramar\Bundle\ResqueBundle\Command;
+namespace Terramar\Bundle\ResqueBundle\Command\Worker;
 
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Process\PhpExecutableFinder;
@@ -15,8 +15,8 @@ class StartWorkerCommand extends ContainerAwareCommand
     protected function configure()
     {
         $this
-            ->setName('resque:worker-start')
-            ->setDescription('Start a bcc resque worker')
+            ->setName('resque:worker:start')
+            ->setDescription('Start a resque worker')
             ->addArgument('queues', InputArgument::REQUIRED, 'Queue names (separate using comma)')
             ->addOption('count', 'c', InputOption::VALUE_REQUIRED, 'How many workers to fork', 1)
             ->addOption('interval', 'i', InputOption::VALUE_REQUIRED, 'How often to check for new jobs across the queues', 5)

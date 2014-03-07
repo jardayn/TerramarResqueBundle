@@ -1,6 +1,6 @@
 <?php
 
-namespace Terramar\Bundle\ResqueBundle\Command;
+namespace Terramar\Bundle\ResqueBundle\Command\Worker;
 
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Terramar\Bundle\ResqueBundle\Resque;
@@ -14,8 +14,8 @@ class StopWorkerCommand extends ContainerAwareCommand
     protected function configure()
     {
         $this
-            ->setName('resque:worker-stop')
-            ->setDescription('Stop a bcc resque worker')
+            ->setName('resque:worker:stop')
+            ->setDescription('Stop a resque worker')
             ->addArgument('id', InputArgument::OPTIONAL, 'Worker id')
             ->addOption('all', 'a', InputOption::VALUE_NONE, 'Should kill all workers')
         ;

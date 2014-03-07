@@ -1,29 +1,31 @@
 <?php
 
-namespace Terramar\Bundle\ResqueBundle\Command;
+namespace Terramar\Bundle\ResqueBundle\Command\Scheduler;
 
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class StartScheduledWorkerCommand extends ContainerAwareCommand
+class StartSchedulerCommand extends AbstractSchedulerCommand
 {
     protected function configure()
     {
         $this
-            ->setName('resque:scheduledworker-start')
-            ->setDescription('Start a bcc scheduled resque worker')
-            ->addOption('foreground', 'f', InputOption::VALUE_NONE, 'Should the worker run in foreground')
+            ->setName('resque:scheduler:start')
+            ->setDescription('Start the resque scheduler')
+            ->addOption('interval', 'i', InputOption::VALUE_REQUIRED, 'How often to check for new jobs across the queues', 5)
+            ->addOption('foreground', 'f', InputOption::VALUE_NONE, 'Should the scheduler run in foreground')
             ->addOption('force', null, InputOption::VALUE_NONE, 'Force creation of a new worker if the PID file exists')
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $pidFile=$this->getContainer()->get('kernel')->getCacheDir().'/terramar_scheduledworker.pid';
+        $pidFile = $this->getPidFilename();
         if (file_exists($pidFile) && !$input->getOption('force')) {
             throw new \Exception('PID file exists - use --force to override');
         }
@@ -31,11 +33,22 @@ class StartScheduledWorkerCommand extends ContainerAwareCommand
         if (file_exists($pidFile)) {
             unlink($pidFile);
         }
-
+        
         $env = array(
             'APP_INCLUDE' => $this->getContainer()->getParameter('kernel.root_dir').'/bootstrap.php.cache',
-            'VVERBOSE'    => 1,
+            'VERBOSE'     => 1,
+            'INTERVAL'    => $input->getOption('interval'),
         );
+        $prefix = $this->getContainer()->getParameter('terramar.resque.prefix');
+        if (!empty($prefix)) {
+            $env['PREFIX'] = $prefix;
+        }
+        if ($input->getOption('verbose')) {
+            $env['VVERBOSE'] = 1;
+        }
+        if ($input->getOption('quiet')) {
+            unset($env['VERBOSE']);
+        }
 
         $redisHost = $this->getContainer()->getParameter('terramar.resque.redis.host');
         $redisPort = $this->getContainer()->getParameter('terramar.resque.redis.port');
@@ -55,10 +68,14 @@ class StartScheduledWorkerCommand extends ContainerAwareCommand
             ));
 
         if (!$input->getOption('foreground')) {
-            $logFile = $this->getContainer()->getParameter(
-                'kernel.logs_dir'
-            ) . '/resque-scheduler_' . $this->getContainer()->getParameter('kernel.environment') . '.log';
-            $workerCommand = 'nohup ' . $workerCommand . ' > ' . $logFile .' 2>&1 & echo $!';
+            $logFile = $this->getContainer()->getParameter('kernel.logs_dir') 
+                . '/resque-scheduler_' 
+                . $this->getContainer()->getParameter('kernel.environment') 
+                . '.log';
+            $workerCommand = strtr('nohup %cmd% > %log_file% 2>&1 & echo $!', array(
+                    '%cmd%'      => $workerCommand,
+                    '%log_file%' => $logFile
+                ));
         }
 
         // In windows: When you pass an environment to CMD it replaces the old environment
@@ -84,13 +101,13 @@ class StartScheduledWorkerCommand extends ContainerAwareCommand
         else {
             $process->run();
             $pid = \trim($process->getOutput());
-            if (function_exists('gethostname')) {
-                $hostname = gethostname();
-            } else {
-                $hostname = php_uname('n');
+            file_put_contents($pidFile, $pid);
+            
+            if (!$input->getOption('quiet')) {
+                $hostname = function_exists('gethostname') ? gethostname() : php_uname('n');
+                
+                $output->writeln(\sprintf('<info>Scheduler started</info> %s:%s', $hostname, $pid));
             }
-            $output->writeln(\sprintf('<info>Worker started</info> %s:%s', $hostname, $pid));
-            file_put_contents($pidFile,$pid);
         }
     }
 

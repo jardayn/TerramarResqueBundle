@@ -12,8 +12,8 @@ class ClearQueueCommand extends ContainerAwareCommand
     protected function configure()
     {
         $this
-            ->setName('resque:clear-queue')
-            ->setDescription('Clear a BCC queue')
+            ->setName('resque:queue:clear')
+            ->setDescription('Clear a resque queue')
             ->addArgument('queue', InputArgument::REQUIRED, 'Queue name')
         ;
     }
