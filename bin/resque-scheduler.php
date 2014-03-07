@@ -3,29 +3,22 @@
 (@include_once __DIR__ . '/../vendor/autoload.php') || @include_once __DIR__ . '/../../../../../../autoload.php';
 
 $REDIS_BACKEND = getenv('REDIS_BACKEND');
+$REDIS_BACKEND_DB = getenv('REDIS_BACKEND_DB');
 if (!empty($REDIS_BACKEND)) {
-    Resque::setBackend($REDIS_BACKEND);
+    Resque::setBackend($REDIS_BACKEND, $REDIS_BACKEND_DB);
 }
 
-// Set log level for resque-scheduler
 $logLevel = 0;
 $LOGGING = getenv('LOGGING');
 $VERBOSE = getenv('VERBOSE');
 $VVERBOSE = getenv('VVERBOSE');
 if (!empty($LOGGING) || !empty($VERBOSE)) {
-    $logLevel = ResqueScheduler_Worker::LOG_NORMAL;
-} elseif (!empty($VVERBOSE)) {
-    $logLevel = ResqueScheduler_Worker::LOG_VERBOSE;
+    $logLevel = Resque_Worker::LOG_NORMAL;
+}
+if (!empty($VVERBOSE)) {
+    $logLevel = Resque_Worker::LOG_VERBOSE;
 }
 
-// Check for jobs every $interval seconds
-$interval = 5;
-$INTERVAL = getenv('INTERVAL');
-if (!empty($INTERVAL)) {
-    $interval = $INTERVAL;
-}
-
-// Load the user's application if one exists
 $APP_INCLUDE = getenv('APP_INCLUDE');
 if ($APP_INCLUDE) {
     if (!file_exists($APP_INCLUDE)) {
@@ -33,6 +26,12 @@ if ($APP_INCLUDE) {
     }
 
     require_once $APP_INCLUDE;
+}
+
+$interval = 5;
+$INTERVAL = getenv('INTERVAL');
+if (!empty($INTERVAL)) {
+    $interval = $INTERVAL;
 }
 
 $worker = new ResqueScheduler_Worker();

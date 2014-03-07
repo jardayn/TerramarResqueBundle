@@ -19,7 +19,8 @@ $VERBOSE = getenv('VERBOSE');
 $VVERBOSE = getenv('VVERBOSE');
 if (!empty($LOGGING) || !empty($VERBOSE)) {
     $logLevel = Resque_Worker::LOG_NORMAL;
-} elseif (!empty($VVERBOSE)) {
+}
+if (!empty($VVERBOSE)) {
     $logLevel = Resque_Worker::LOG_VERBOSE;
 }
 
