@@ -17,7 +17,7 @@ class StartWorkerCommand extends ContainerAwareCommand
         $this
             ->setName('resque:worker:start')
             ->setDescription('Start a resque worker')
-            ->addArgument('queues', InputArgument::REQUIRED, 'Queue names (separate using comma)')
+            ->addArgument('queues', InputArgument::OPTIONAL, 'Queue names (separate using comma)', '*')
             ->addOption('count', 'c', InputOption::VALUE_REQUIRED, 'How many workers to fork', 1)
             ->addOption('interval', 'i', InputOption::VALUE_REQUIRED, 'How often to check for new jobs across the queues', 5)
             ->addOption('foreground', 'f', InputOption::VALUE_NONE, 'Should the worker run in foreground')
