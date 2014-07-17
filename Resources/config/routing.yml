@@ -7,13 +7,9 @@ TerramarResqueBundle_queue_show:
   defaults:  { _controller: TerramarResqueBundle:Default:showQueue }
 
 TerramarResqueBundle_failed_list:
-  path:      /failed/list
+  path:      /failed
   defaults:  { _controller: TerramarResqueBundle:Default:listFailed }
 
 TerramarResqueBundle_scheduled_list:
-  path:      /scheduled/list
+  path:      /scheduled
   defaults:  { _controller: TerramarResqueBundle:Default:listScheduled }
-
-TerramarResqueBundle_scheduled_timestamp:
-  path:      /scheduled/{timestamp}
-  defaults:  { _controller: TerramarResqueBundle:Default:showTimestamp }

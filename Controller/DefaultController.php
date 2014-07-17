@@ -30,6 +30,7 @@ class DefaultController extends Controller
         return $this->render(
             'TerramarResqueBundle:Default:queue_show.html.twig',
             array(
+                'resque' => $this->getResque(),
                 'queue' => $queue,
                 'jobs' => $jobs,
                 'showingAll' => $showingAll
@@ -50,6 +51,7 @@ class DefaultController extends Controller
         return $this->render(
             'TerramarResqueBundle:Default:failed_list.html.twig',
             array(
+                'resque' => $this->getResque(),
                 'jobs' => $jobs,
                 'showingAll' => $showingAll,
             )
@@ -58,10 +60,20 @@ class DefaultController extends Controller
 
     public function listScheduledAction()
     {
+        $jobs = array();
+        foreach ($this->getResque()->getDelayedJobTimestamps() as $timestamp) {
+            foreach ($this->getResque()->getJobsForTimestamp($timestamp[0]) as $job) {
+                $job['schedule_date'] = $timestamp[0];
+                
+                $jobs[] = $job;
+            }
+        }
+        
         return $this->render(
             'TerramarResqueBundle:Default:scheduled_list.html.twig',
             array(
-                'timestamps' => $this->getResque()->getDelayedJobTimestamps()
+                'resque' => $this->getResque(),
+                'jobs' => $jobs
             )
         );
     }
@@ -78,6 +90,7 @@ class DefaultController extends Controller
         return $this->render(
             'TerramarResqueBundle:Default:scheduled_timestamp.html.twig',
             array(
+                'resque' => $this->getResque(),
                 'timestamp' => $timestamp,
                 'jobs' => $jobs
             )

@@ -16,6 +16,11 @@ class FailedJob
     {
         $this->data = $data;
     }
+    
+    public function getArgs()
+    {
+        return $this->data['payload']['args'][0];
+    }
 
     public function getFailedAt()
     {
