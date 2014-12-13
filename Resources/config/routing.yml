@@ -1,0 +1,15 @@
+TerramarResqueBundle_homepage:
+  path:      /
+  defaults:  { _controller: TerramarResqueBundle:Default:index }
+
+TerramarResqueBundle_queue_show:
+  path:      /queue/{queue}
+  defaults:  { _controller: TerramarResqueBundle:Default:showQueue }
+
+TerramarResqueBundle_failed_list:
+  path:      /failed
+  defaults:  { _controller: TerramarResqueBundle:Default:listFailed }
+
+TerramarResqueBundle_scheduled_list:
+  path:      /scheduled
+  defaults:  { _controller: TerramarResqueBundle:Default:listScheduled }
