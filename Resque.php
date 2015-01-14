@@ -219,4 +219,9 @@ class Resque
 
         return $result;
     }
+
+    public function clearFailedJobs()
+    {
+        \Resque::redis()->del('failed');
+    }
 }

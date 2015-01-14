@@ -58,6 +58,13 @@ class DefaultController extends Controller
         );
     }
 
+    public function clearFailedAction()
+    {
+        $this->getResque()->clearFailedJobs();
+
+        return $this->redirect($this->generateUrl('TerramarResqueBundle_failed_list'));
+    }
+
     public function listScheduledAction()
     {
         $jobs = array();

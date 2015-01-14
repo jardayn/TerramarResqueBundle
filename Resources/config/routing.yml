@@ -10,6 +10,10 @@ TerramarResqueBundle_failed_list:
   path:      /failed
   defaults:  { _controller: TerramarResqueBundle:Default:listFailed }
 
+TerramarResqueBundle_clear_failed:
+  path:      /failed/clear
+  defaults:  { _controller: TerramarResqueBundle:Default:clearFailed }
+
 TerramarResqueBundle_scheduled_list:
   path:      /scheduled
   defaults:  { _controller: TerramarResqueBundle:Default:listScheduled }
