@@ -52,6 +52,7 @@ abstract class ContainerAwareJob extends Job
 
     public function tearDown()
     {
+        parent::tearDown();
         if ($this->kernel) {
             $this->kernel->shutdown();
         }

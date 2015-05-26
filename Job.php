@@ -19,6 +19,11 @@ abstract class Job
      */
     public $args = array();
 
+    /**
+     * @var \Exception
+     */
+    protected $failure;
+
     public function getName()
     {
         return \get_class($this);
@@ -26,18 +31,26 @@ abstract class Job
 
     public function setUp()
     {
-
     }
 
+    /**
+     * Overrides the default perform with an exception catch all
+     *
+     * This is so that tearDown is still performed even during exceptional circumstances.
+     */
     public function perform()
     {
-        $this->run($this->args);
+        try {
+            $this->run($this->args);
+        } catch (\Exception $e) {
+            $this->failure = $e;
+            $this->job->fail($e);
+        }
     }
 
     abstract public function run($args);
 
     public function tearDown()
     {
-
     }
 }
