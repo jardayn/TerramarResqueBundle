@@ -14,16 +14,31 @@ class Resque
      */
     private $redisConfiguration;
 
+    /**
+     * Constructor
+     *
+     * @param array $kernelOptions
+     */
     public function __construct(array $kernelOptions)
     {
         $this->kernelOptions = $kernelOptions;
     }
 
+    /**
+     * @param string $prefix
+     */
     public function setPrefix($prefix)
     {
         \Resque_Redis::prefix($prefix);
     }
 
+    /**
+     * Set the Redis configuration
+     *
+     * @param string $host
+     * @param string $port
+     * @param string $database
+     */
     public function setRedisConfiguration($host, $port, $database)
     {
         $this->redisConfiguration = array(
@@ -39,11 +54,22 @@ class Resque
         \Resque::setBackend($host, $database);
     }
 
+    /**
+     * @return array
+     */
     public function getRedisConfiguration()
     {
         return $this->redisConfiguration;
     }
 
+    /**
+     * Enqueue a job with Resque
+     *
+     * @param Job  $job
+     * @param bool $trackStatus
+     *
+     * @return \Resque_Job_Status
+     */
     public function enqueue(Job $job, $trackStatus = false)
     {
         if ($job instanceof ContainerAwareJob) {
@@ -52,30 +78,74 @@ class Resque
 
         $result = \Resque::enqueue($job->queue, \get_class($job), $job->args, $trackStatus);
 
-        if ($trackStatus) {
-            return new \Resque_Job_Status($result);
-        }
-
-        return null;
+        return new \Resque_Job_Status($result);
     }
 
-    public function enqueueOnce(Job $job, $trackStatus = false)
+    /**
+     * Returns true if the given Job is already queued
+     *
+     * @param Job  $job
+     * @param bool $strict If true, check that arguments are identical
+     *
+     * @return bool
+     */
+    public function isQueued(Job $job, $strict = false)
     {
+        if ($job instanceof ContainerAwareJob) {
+            $job->setKernelOptions($this->kernelOptions);
+        }
+
         $queue = new Queue($job->queue);
         $jobs  = $queue->getJobs();
 
-        foreach ($jobs AS $j) {
-            if ($j->job->payload['class'] == get_class($job)) {
-                if (count(array_intersect($j->args, $job->args)) == count($job->args)) {
-                    return ($trackStatus) ? $j->job->payload['id'] : null;
-                }
+        $jobName = $job->getName();
+
+        foreach ($jobs as $otherJob) {
+            if ($otherJob->getName() !== $jobName) {
+                continue;
             }
+
+            if ((!$strict && count(array_intersect($otherJob->args, $job->args)) === count($job->args))
+                || $otherJob->args === $job->args
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Enqueue a job only if it is not already in the queue
+     *
+     * @param Job  $job
+     * @param bool $trackStatus
+     * @param bool $strict If true, check that arguments are identical
+     *
+     * @return false|\Resque_Job_Status False if the Job is already queued
+     */
+    public function enqueueOnce(Job $job, $trackStatus = false, $strict = false)
+    {
+        if ($job instanceof ContainerAwareJob) {
+            $job->setKernelOptions($this->kernelOptions);
+        }
+
+        if ($this->isQueued($job, $strict)) {
+            return false;
         }
 
         return $this->enqueue($job, $trackStatus);
     }
 
-    public function enqueueAt($at,Job $job)
+    /**
+     * Enqueue a job for later processing
+     *
+     * @param int $at Timestamp of when to run the Job
+     * @param Job $job
+     *
+     * @return null
+     */
+    public function enqueueAt($at, Job $job)
     {
         if ($job instanceof ContainerAwareJob) {
             $job->setKernelOptions($this->kernelOptions);
@@ -86,7 +156,15 @@ class Resque
         return null;
     }
 
-    public function enqueueIn($in,Job $job)
+    /**
+     * Enqueue a job for processing in the given number of seconds
+     *
+     * @param int $in Delay, in seconds, of when to run the Job
+     * @param Job $job
+     *
+     * @return null
+     */
+    public function enqueueIn($in, Job $job)
     {
         if ($job instanceof ContainerAwareJob) {
             $job->setKernelOptions($this->kernelOptions);
@@ -97,15 +175,30 @@ class Resque
         return null;
     }
 
+    /**
+     * Remove a delayed job
+     *
+     * @param Job $job
+     *
+     * @return int
+     */
     public function removedDelayed(Job $job)
     {
         if ($job instanceof ContainerAwareJob) {
             $job->setKernelOptions($this->kernelOptions);
         }
 
-        return \ResqueScheduler::removeDelayed($job->queue, \get_class($job),$job->args);
+        return \ResqueScheduler::removeDelayed($job->queue, \get_class($job), $job->args);
     }
 
+    /**
+     * Remove a delayed job at the given timestamp
+     *
+     * @param int $at
+     * @param Job $job
+     *
+     * @return mixed
+     */
     public function removeFromTimestamp($at, Job $job)
     {
         if ($job instanceof ContainerAwareJob) {
@@ -115,6 +208,11 @@ class Resque
         return \ResqueScheduler::removeDelayedJobFromTimestamp($at, $job->queue, \get_class($job), $job->args);
     }
 
+    /**
+     * Get all existing queues
+     *
+     * @return array|Queue[]
+     */
     public function getQueues()
     {
         return \array_map(function ($queue) {
@@ -123,7 +221,10 @@ class Resque
     }
 
     /**
-     * @param $queue
+     * Get the given queue
+     *
+     * @param string $queue The queue name
+     *
      * @return Queue
      */
     public function getQueue($queue)
@@ -131,6 +232,11 @@ class Resque
         return new Queue($queue);
     }
 
+    /**
+     * Get all existing workers
+     *
+     * @return array|Worker[]
+     */
     public function getWorkers()
     {
         return \array_map(function ($worker) {
@@ -138,6 +244,13 @@ class Resque
         }, \Resque_Worker::all());
     }
 
+    /**
+     * Get a worker with the given ID
+     *
+     * @param string $id
+     *
+     * @return null|Worker
+     */
     public function getWorker($id)
     {
         $worker = \Resque_Worker::find($id);
@@ -149,6 +262,9 @@ class Resque
         return new Worker($worker);
     }
 
+    /**
+     * Prune dead workers
+     */
     public function pruneDeadWorkers()
     {
         // HACK, prune dead workers, just in case
@@ -156,57 +272,86 @@ class Resque
         $worker->pruneDeadWorkers();
     }
 
+    /**
+     * @return array
+     */
     public function getDelayedJobTimestamps()
     {
-        $timestamps= \Resque::redis()->zrange('delayed_queue_schedule', 0, -1);
+        $timestamps = \Resque::redis()->zrange('delayed_queue_schedule', 0, -1);
 
         //TODO: find a more efficient way to do this
-        $out=array();
+        $out = array();
         foreach ($timestamps as $timestamp) {
-            $out[]=array($timestamp,\Resque::redis()->llen('delayed:'.$timestamp));
-        }
-
-        return $out;
-    }
-
-    public function getFirstDelayedJobTimestamp()
-    {
-        $timestamps=$this->getDelayedJobTimestamps();
-        if (count($timestamps)>0) {
-            return $timestamps[0];
-        }
-
-        return array(null,0);
-    }
-
-    public function getNumberOfDelayedJobs()
-    {
-        return \ResqueScheduler::getDelayedQueueScheduleSize();
-    }
-
-    public function getJobsForTimestamp($timestamp)
-    {
-        $jobs= \Resque::redis()->lrange('delayed:'.$timestamp,0, -1);
-        $out=array();
-        foreach ($jobs as $job) {
-            $out[]=json_decode($job, true);
+            $out[] = array($timestamp, \Resque::redis()->llen('delayed:' . $timestamp));
         }
 
         return $out;
     }
 
     /**
-     * @param $queue
+     * @return array
+     */
+    public function getFirstDelayedJobTimestamp()
+    {
+        $timestamps = $this->getDelayedJobTimestamps();
+        if (count($timestamps) > 0) {
+            return $timestamps[0];
+        }
+
+        return array(null, 0);
+    }
+
+    /**
+     * Get the number of delayed jobs
+     *
+     * @return int
+     */
+    public function getNumberOfDelayedJobs()
+    {
+        return \ResqueScheduler::getDelayedQueueScheduleSize();
+    }
+
+    /**
+     * Get jobs
+     *
+     * @param $timestamp
+     *
+     * @return array
+     */
+    public function getJobsForTimestamp($timestamp)
+    {
+        $jobs = \Resque::redis()->lrange('delayed:' . $timestamp, 0, -1);
+        $out  = array();
+        foreach ($jobs as $job) {
+            $out[] = json_decode($job, true);
+        }
+
+        return $out;
+    }
+
+    /**
+     * Clear the given queue
+     *
+     * @param string $queue The name of the queue
+     *
      * @return int
      */
     public function clearQueue($queue)
     {
-        $length=\Resque::redis()->llen('queue:'.$queue);
-        \Resque::redis()->del('queue:'.$queue);
+        $length = \Resque::redis()->llen('queue:' . $queue);
+        \Resque::redis()->del('queue:' . $queue);
 
         return $length;
     }
 
+    /**
+     * Get failed jobs
+     *
+     * @param int $start
+     * @param int $count
+     *
+     * @return array|FailedJob[]
+     */
     public function getFailedJobs($start = -100, $count = 100)
     {
         $jobs = \Resque::redis()->lrange('failed', $start, $count);
@@ -220,6 +365,9 @@ class Resque
         return $result;
     }
 
+    /**
+     * Clear the list of failed jobs
+     */
     public function clearFailedJobs()
     {
         \Resque::redis()->del('failed');

@@ -24,11 +24,25 @@ abstract class Job
      */
     protected $failure;
 
+    /**
+     * @return string
+     */
     public function getName()
     {
         return \get_class($this);
     }
 
+    /**
+     * @return null|string
+     */
+    public function getId()
+    {
+        return isset($this->job->payload['id']) ? $this->job->payload['id'] : null;
+    }
+
+    /**
+     * Called before a job is performed
+     */
     public function setUp()
     {
     }
@@ -48,8 +62,18 @@ abstract class Job
         }
     }
 
+    /**
+     * Perform the work
+     *
+     * @param array $args
+     *
+     * @return void
+     */
     abstract public function run($args);
 
+    /**
+     * Called after a job is performed
+     */
     public function tearDown()
     {
     }
