@@ -1,5 +1,5 @@
 {
-  "name": "terramar/resque-bundle",
+  "name": "jardayn/resque-bundle",
   "type": "symfony-bundle",
   "description": "A fork of BCCResqueBundle, provides integration with php-resque and Symfony2 applications",
   "keywords": ["resque", "php"],
