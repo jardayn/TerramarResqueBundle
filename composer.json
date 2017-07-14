@@ -15,12 +15,13 @@
       "email": "contact@tylersommer.pro"
     }
   ],
+
   "require": {
     "symfony/framework-bundle": "~2.3",
     "symfony/console": "~2.3",
     "symfony/process": "~2.3",
-    "chrisboulton/php-resque": "~1.2",
-    "chrisboulton/php-resque-scheduler": "~1.1"
+    "chrisboulton/php-resque": "dev-master",
+    "chrisboulton/php-resque-scheduler": "dev-master"
   },
   "autoload": {
     "psr-0": { "Terramar\\Bundle\\ResqueBundle": "" }
